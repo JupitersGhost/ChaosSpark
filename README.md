@@ -1,5 +1,7 @@
 # ChaosSpark
 
+![ChaosSpark hardware: guitar pickups and an ESP32 entropy source](chaosspark-logo.png)
+
 ChaosSpark is an experimental entropy observatory for a Raspberry Pi 5. It
 collects changing observations from several local sources, evaluates each
 source independently, and combines accepted material under deliberately
