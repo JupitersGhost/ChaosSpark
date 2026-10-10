@@ -1,8 +1,8 @@
-# ChaosSpark
+# Chaos Spark
 
-![ChaosSpark hardware: guitar pickups and an ESP32 entropy source](chaosspark-logo.png)
+![Chaos Spark hardware: guitar pickups and an ESP32 entropy source](chaosspark-logo.png)
 
-ChaosSpark is an experimental entropy observatory for a Raspberry Pi 5. It
+Chaos Spark is an experimental entropy observatory for a Raspberry Pi 5. It
 collects changing observations from several local sources, evaluates each
 source independently, and combines accepted material under deliberately
 conservative crediting rules.
@@ -30,7 +30,7 @@ diagnostics. Sources must pass their health gate before they can contribute.
 Accepted material is mixed and conditioned with SHA3-512, while a local web
 dashboard exposes current state and a short browser-side history.
 
-ChaosSpark can also exchange authenticated CHVS frames over a private network
+Chaos Spark can also exchange authenticated CHVS frames over a private network
 overlay. Received or already-conditioned material may influence the pool, but
 it receives zero new local entropy credit.
 
