@@ -99,10 +99,19 @@ not need `algorithm`, `contributor_count`, or `conditioned_hex`.
 The protocol name and field rules above are the compatibility boundary for the
 future firmware repository. If they change, both ends should change together.
 
-## Example hardware profile
+## Reference system
 
-The Makefile reflects the Raspberry Pi 5 system this was built around. These
-values are examples, not general requirements:
+The current installation uses the following host platform:
+
+| Component | Configuration |
+| --- | --- |
+| Host | Raspberry Pi 5 with 4 GB RAM |
+| Operating system | Void Linux |
+| OS and storage | USB flash drive |
+| Enclosure and cooling | Fan-cooled Raspberry Pi case purchased through Amazon; exact model not recorded |
+
+The Makefile also reflects the attached hardware and device paths on this
+system. These values are deployment examples, not general requirements:
 
 - Raspberry Pi hardware RNG at `/dev/hwrng`.
 - CP2102-based Chaosfield ESP32 (`10c4:ea60`) with example serial `0001`.
