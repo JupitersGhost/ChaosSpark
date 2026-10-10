@@ -162,5 +162,5 @@ web/             local status dashboard
 
 ## License
 
-ChaosSpark is available under the Apache License 2.0. See `LICENSE` for the full
+Chaos Spark is available under the Apache License 2.0. See `LICENSE` for the full
 terms.
