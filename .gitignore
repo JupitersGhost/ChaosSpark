@@ -1,0 +1,30 @@
+# Ada/GNAT build output
+/bin/
+/obj/
+*.ali
+*.o
+*.bexch
+
+# GNATprove working state and reports
+gnatprove/
+*.spark
+*.gnat-json
+why3session.xml
+why3shapes
+
+# Runtime material must never be committed
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+peers
+spool.chvs
+status.json
+*.raw
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+*.swp
+*~

@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ChaosSpark · entropy observatory</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #05070d;
+  --bg2: #080b14;
+  --panel: #0d1220;
+  --panel2: #11182a;
+  --panel3: #161d31;
+  --line: #26324a;
+  --line2: #35415c;
+  --text: #eef3ff;
+  --muted: #8995ad;
+  --blue: #61b6ff;
+  --purple: #a98cff;
+  --purple2: #745cff;
+  --gold: #e6b85c;
+  --gold2: #c9953f;
+  --good: #72d7ae;
+  --warn: #e6b85c;
+  --suspect: #ff9d66;
+  --bad: #ff667f;
+  --cyan: #67d8ff;
+  --shadow: 0 18px 55px rgba(0,0,0,.28);
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% -10%, rgba(116,92,255,.12), transparent 34rem),
+    radial-gradient(circle at 82% 0%, rgba(97,182,255,.08), transparent 30rem),
+    linear-gradient(180deg, #060812 0%, var(--bg) 42%, #04060b 100%);
+  color: var(--text);
+  font: 14px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+main { max-width: 1480px; margin: auto; padding: 28px 24px 52px; }
+header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 4px 0 22px;
+  border-bottom: 1px solid rgba(120,139,177,.24);
+}
+.brand { display: flex; gap: 14px; align-items: flex-start; }
+.moon {
+  width: 44px; height: 44px; display: grid; place-items: center;
+  border: 1px solid rgba(230,184,92,.28); border-radius: 13px;
+  background: linear-gradient(145deg, rgba(230,184,92,.11), rgba(169,140,255,.07));
+  box-shadow: inset 0 0 28px rgba(169,140,255,.05);
+  font-size: 24px;
+}
+h1 { margin: 0; font-size: 30px; letter-spacing: -1.2px; color: #d9eaff; }
+.subtitle { margin-top: 3px; color: var(--purple); letter-spacing: .11em; font-size: 11px; text-transform: uppercase; }
+.kicker { margin-top: 5px; color: var(--muted); }
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; text-align: right; }
+.badges { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.badge {
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px;
+  color: var(--muted); background: rgba(17,24,42,.85); font-size: 12px;
+}
+.badge.mesh { color: var(--gold); border-color: rgba(230,184,92,.35); }
+.badge.live { color: var(--good); border-color: rgba(114,215,174,.35); }
+.badge.dead { color: var(--bad); border-color: rgba(255,102,127,.35); }
+#updated { color: var(--muted); font-size: 12px; }
+
+.grid { display: grid; gap: 14px; }
+.hero-grid { grid-template-columns: repeat(6, minmax(150px, 1fr)); margin: 22px 0; }
+.card, section {
+  background: linear-gradient(180deg, rgba(17,24,42,.95), rgba(12,17,30,.97));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.card { padding: 16px; min-height: 116px; }
+.label { color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }
+.value { margin-top: 8px; font-size: 26px; color: #fff; letter-spacing: -.5px; }
+.sub { margin-top: 5px; color: var(--muted); font-size: 11px; }
+.gold { color: var(--gold); }
+.blue { color: var(--blue); }
+.purple { color: var(--purple); }
+section { margin-top: 16px; padding: 18px; }
+.section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:14px; }
+h2 { margin: 0; font-size: 16px; color: #dfe8ff; letter-spacing: .01em; }
+.section-note { color: var(--muted); font-size: 12px; max-width: 880px; margin-top: 4px; }
+
+.health-grid { grid-template-columns: repeat(4, minmax(200px,1fr)); }
+.health-card { padding: 14px 15px; min-height: 104px; position: relative; overflow: hidden; }
+.health-card::before { content:""; position:absolute; inset:0 auto 0 0; width:3px; background: var(--line2); }
+.health-card.healthy::before { background: var(--good); }
+.health-card.warmup::before { background: var(--gold); }
+.health-card.suspect::before { background: var(--suspect); }
+.health-card.quarantined::before, .health-card.absent::before { background: var(--bad); }
+.health-top { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+.source-name { color:#f5f7ff; font-weight:700; font-size:13px; }
+.state { font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
+.state.healthy { color:var(--good); }
+.state.warmup { color:var(--gold); }
+.state.suspect { color:var(--suspect); }
+.state.quarantined, .state.absent { color:var(--bad); }
+.source-meta { color:var(--muted); margin-top:5px; font-size:11px; }
+.source-score { margin-top:10px; display:flex; align-items:baseline; gap:8px; }
+.source-score strong { font-size:21px; font-weight:650; color:var(--blue); }
+.source-score span { color:var(--muted); font-size:11px; }
+
+.charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.chart {
+  position:relative; padding:14px 14px 10px; min-height:245px;
+  background:linear-gradient(180deg, rgba(7,10,19,.78), rgba(11,15,27,.9));
+  border:1px solid rgba(79,95,130,.38); border-radius:12px;
+}
+.chart h3 { margin:0 0 8px; font-size:13px; font-weight:650; color:#dfe8ff; }
+.chart svg { width:100%; height:auto; display:block; touch-action:none; }
+.legend { display:flex; flex-wrap:wrap; gap:5px 14px; color:#b7c1d5; font-size:11px; margin-top:6px; }
+.key { width:14px; display:inline-block; border-top:2px solid; vertical-align:middle; margin-right:6px; }
+.tip { position:absolute; z-index:3; pointer-events:none; background:#131a2b; border:1px solid #405071; border-radius:9px; padding:8px 10px; font-size:11px; white-space:nowrap; box-shadow:0 12px 35px rgba(0,0,0,.4); }
+.tip .when { color:var(--muted); margin-bottom:4px; }
+.tip b { margin-right:6px; }
+.empty-chart { color:var(--muted); display:grid; place-items:center; min-height:175px; text-align:center; padding:18px; }
+
+.protocol-grid { grid-template-columns: repeat(6,minmax(130px,1fr)); }
+.protocol-tile { background:rgba(8,11,20,.55); border:1px solid rgba(61,75,105,.42); border-radius:11px; padding:13px; }
+.protocol-tile strong { display:block; margin-top:6px; font-size:20px; color:#fff; }
+.protocol-tile small { color:var(--muted); }
+.protocol-good strong { color:var(--good); }
+.protocol-gold strong { color:var(--gold); }
+
+.scroll { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th, td { padding:10px 9px; border-bottom:1px solid rgba(48,62,88,.65); text-align:left; white-space:nowrap; }
+th { color:#9fd0ff; background:rgba(19,28,46,.92); position:sticky; top:0; font-weight:600; }
+tbody tr:hover { background:rgba(97,182,255,.035); }
+td.muted { color:var(--muted); }
+.health-text.healthy { color:var(--good); }
+.health-text.warmup { color:var(--gold); }
+.health-text.suspect { color:var(--suspect); }
+.health-text.absent, .health-text.quarantined { color:var(--bad); }
+
+.footer-note { margin-top:14px; color:var(--muted); font-size:11px; line-height:1.55; }
+#errors { color:var(--bad); white-space:pre-wrap; margin-top:12px; }
+.sep { color:#475472; }
+
+@media(max-width:1180px){
+  .hero-grid{grid-template-columns:repeat(3,minmax(160px,1fr))}
+  .protocol-grid{grid-template-columns:repeat(3,minmax(150px,1fr))}
+  .health-grid{grid-template-columns:repeat(2,minmax(220px,1fr))}
+}
+@media(max-width:800px){
+  main{padding:18px 12px 40px}
+  header{flex-direction:column}.header-right{align-items:flex-start;text-align:left}.badges{justify-content:flex-start}
+  .hero-grid,.health-grid,.protocol-grid,.charts{grid-template-columns:1fr}
+  h1{font-size:25px}.value{font-size:23px}
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="brand">
+    <div class="moon">🌙</div>
+    <div>
+      <h1>chaos-spark</h1>
+      <div class="subtitle">ChaosSpark</div>
+      <div class="kicker">entropy observatory / change across time</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="badges">
+      <span class="badge mesh">PRIVATE OVERLAY</span>
+      <span class="badge" id="connection">CONNECTING</span>
+    </div>
+    <div id="updated">waiting for ChaosSpark…</div>
+  </div>
+</header>
+
+<div class="grid hero-grid">
+  <div class="card"><div class="label">Pool generation</div><div class="value gold" id="generation">—</div><div class="sub" id="poolSub">conditioner state</div></div>
+  <div class="card"><div class="label">CHVS sequence</div><div class="value blue" id="sequence">—</div><div class="sub" id="chvsSub">outbound / inbound</div></div>
+  <div class="card"><div class="label">RF motion score</div><div class="value purple" id="motion">—</div><div class="sub">Wi-Fi RSSI change signal</div></div>
+  <div class="card"><div class="label">Conditioned Shannon</div><div class="value" id="cshannon">—</div><div class="sub" id="condBytes">window filling</div></div>
+  <div class="card"><div class="label">Conditioned min-H</div><div class="value" id="cmin">—</div><div class="sub">diagnostic, not entropy credit</div></div>
+  <div class="card"><div class="label">Source state</div><div class="value" id="healthyCount">—</div><div class="sub" id="healthSummary">waiting</div></div>
+</div>
+
+<section>
+  <div class="section-head">
+    <div>
+      <h2>Source constellation</h2>
+      <div class="section-note">Current health and conservative byte-level score. The score is the minimum of Shannon, empirical MCV min-entropy, and the first-order predictor estimate. It is diagnostic, not a certified entropy rate.</div>
+    </div>
+  </div>
+  <div class="grid health-grid" id="healthCards"></div>
+</section>
+
+<section>
+  <div class="section-head">
+    <div>
+      <h2>Thirty-minute watch</h2>
+      <div class="section-note">The browser samples <code>/status.json</code> every two seconds. History is retained locally in this browser for up to 30 minutes, including across refreshes. The dashboard sends no telemetry.</div>
+    </div>
+  </div>
+  <div class="charts" id="charts"></div>
+</section>
+
+<section>
+  <div class="section-head">
+    <div>
+      <h2>Chaosfield protocol</h2>
+      <div class="section-note">The ESP32 performs its own raw-source health tests and SHA3-512 conditioning. Chaos Spark validates the serial protocol and mixes valid conditioned blocks with zero locally credited entropy.</div>
+    </div>
+  </div>
+  <div class="grid protocol-grid" id="chaosfieldTiles"></div>
+  <div class="footer-note" id="chaosfieldMeta">Waiting for protocol state.</div>
+</section>
+
+<section>
+  <div class="section-head">
+    <div>
+      <h2>Current source diagnostics</h2>
+      <div class="section-note">Full current-window metrics from Chaos Spark. Structured and conditioned sources can intentionally show zero entropy metrics or zero credit.</div>
+    </div>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr>
+        <th>Source</th><th>Class</th><th>Health</th><th>Window</th><th>Score</th><th>Shannon</th><th>Min-H</th><th>Predictor</th><th>χ²</th><th>Serial corr.</th><th>Credit</th><th>Unique</th><th>RCT</th><th>APT</th><th>Raw</th><th>Accepted</th><th>Gated</th>
+      </tr></thead>
+      <tbody id="sourceRows"></tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="section-head"><div><h2>CHVS / remote provenance</h2><div class="section-note">Private overlay transport state. Remote conditioned material is influence only and receives zero new local entropy credit.</div></div></div>
+  <div class="grid protocol-grid" id="chvsTiles"></div>
+</section>
+
+<div id="errors"></div>
+<div class="footer-note">ChaosSpark reports observations, health tests, and conservative engineering estimates. Passing diagnostics does not establish a certified entropy rate. SHA3 conditioning does not create entropy.</div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const SVG = 'http://www.w3.org/2000/svg';
+const HISTORY_KEY = 'chaos-spark-history-v1';
+const MAX_AGE_MS = 30 * 60 * 1000;
+const MAX_POINTS = 900;
+const SOURCE_ORDER = ['PI_HWRNG','CHAOSFIELD','CAMERA','MICROPHONE','WIFI_RSSI','BLUETOOTH','HWMON_TIMING','REMOTE_CHVS'];
+const SOURCE_COLORS = {
+  PI_HWRNG:'#e6b85c', CHAOSFIELD:'#a98cff', CAMERA:'#61b6ff', MICROPHONE:'#d67fff',
+  WIFI_RSSI:'#67d8ff', BLUETOOTH:'#7d8cff', HWMON_TIMING:'#c29b60', REMOTE_CHVS:'#c4adff'
+};
+const SOURCE_LABELS = {
+  PI_HWRNG:'Pi HWRNG', CHAOSFIELD:'Chaosfield', CAMERA:'Camera temporal activity', MICROPHONE:'Microphone temporal activity',
+  WIFI_RSSI:'Wi-Fi RSSI', BLUETOOTH:'Bluetooth RSSI', HWMON_TIMING:'HWMON / timing', REMOTE_CHVS:'Remote CHVS'
+};
+let history = loadHistory();
+let previous = history.length ? history[history.length - 1] : null;
+
+function loadHistory(){
+  try {
+    const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    const cutoff = Date.now() - MAX_AGE_MS;
+    return Array.isArray(raw) ? raw.filter(x => x && x.t >= cutoff).slice(-MAX_POINTS) : [];
+  } catch { return []; }
+}
+function saveHistory(){
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch {}
+}
+function n(v, d=3){ return Number.isFinite(Number(v)) ? Number(v).toFixed(d) : '—'; }
+function int(v){ return Number.isFinite(Number(v)) ? Number(v).toLocaleString() : '—'; }
+function entropy(v){ return Number(v || 0) / 1000; }
+function score(s){
+  const vals = [s?.shannon_milli, s?.min_entropy_milli, s?.markov_milli].map(Number);
+  if (vals.some(v => !Number.isFinite(v) || v <= 0)) return null;
+  return Math.min(...vals) / 1000;
+}
+function healthClass(v){ return String(v || 'absent').toLowerCase(); }
+function sourceColor(id){ return SOURCE_COLORS[id] || '#61b6ff'; }
+function sourceLabel(id){ return SOURCE_LABELS[id] || id; }
+function el(tag, text, cls){ const x=document.createElement(tag); if(text!==undefined)x.textContent=text; if(cls)x.className=cls; return x; }
+function svg(tag, attrs){ const x=document.createElementNS(SVG, tag); for(const [k,v] of Object.entries(attrs))x.setAttribute(k,v); return x; }
+function ageText(ms){
+  if(!Number.isFinite(ms) || ms<=0) return 'never';
+  const s=Math.max(0,(Date.now()-ms)/1000);
+  return s<120 ? `${Math.round(s)} s ago` : s<7200 ? `${Math.round(s/60)} min ago` : `${(s/3600).toFixed(1)} h ago`;
+}
+function formatRate(v){ if(!Number.isFinite(v)) return '—'; return v>=1024 ? `${(v/1024).toFixed(1)} KiB/s` : `${v.toFixed(1)} B/s`; }
+
+function snapshot(d){
+  const t=Date.now();
+  const src={};
+  for(const s of d.sources || []){
+    src[s.id]={
+      score:score(s), sh:entropy(s.shannon_milli), mh:entropy(s.min_entropy_milli), mk:entropy(s.markov_milli),
+      health:s.health, raw:Number(s.raw_bytes||0), accepted:Number(s.accepted_bytes||0), gated:Number(s.gated_bytes||0), credit:Number(s.credited_bits||0)
+    };
+  }
+  const snap={
+    t, motion:Number(d.wifi_motion_score||0), generation:Number(d.pool_generation||0), chvs:Number(d.chvs_sequence||0),
+    outbound:Number(d.outbound_frames||0), inbound:Number(d.inbound_frames||0), src, rates:{}
+  };
+  const prev = history.length ? history[history.length-1] : null;
+  if(prev && t>prev.t){
+    const dt=(t-prev.t)/1000;
+    for(const id of SOURCE_ORDER){
+      const a=src[id]?.raw, b=prev.src?.[id]?.raw;
+      if(Number.isFinite(a)&&Number.isFinite(b)&&a>=b) snap.rates[id]=(a-b)/dt;
+    }
+  }
+  history.push(snap);
+  const cutoff=t-MAX_AGE_MS;
+  history=history.filter(x=>x.t>=cutoff).slice(-MAX_POINTS);
+  previous=snap;
+  saveHistory();
+}
+
+function renderTop(d){
+  $('generation').textContent=int(d.pool_generation);
+  $('sequence').textContent=int(d.chvs_sequence);
+  $('motion').textContent=int(d.wifi_motion_score);
+  $('cshannon').textContent=n(entropy(d.conditioned?.shannon_milli));
+  $('cmin').textContent=n(entropy(d.conditioned?.min_entropy_milli));
+  $('condBytes').textContent=`${int(d.conditioned?.sample_bytes || 0)} / 16,384 bytes sampled`;
+  $('poolSub').textContent=`pending credit ${int(d.pending_credited_bits || 0)} bits`;
+  $('chvsSub').textContent=`TX ${int(d.outbound_frames || 0)} · RX ${int(d.inbound_frames || 0)} · rejected ${int(d.inbound_rejected || 0)}`;
+  const hs=(d.sources||[]).map(s=>healthClass(s.health));
+  const healthy=hs.filter(x=>x==='healthy').length, warm=hs.filter(x=>x==='warmup').length, bad=hs.filter(x=>x==='suspect'||x==='quarantined').length;
+  $('healthyCount').textContent=`${healthy} healthy`;
+  $('healthSummary').textContent=`${warm} warmup · ${bad} degraded · ${hs.filter(x=>x==='absent').length} absent`;
+}
+
+function renderHealthCards(d){
+  const box=$('healthCards'); box.replaceChildren();
+  const byId=Object.fromEntries((d.sources||[]).map(s=>[s.id,s]));
+  for(const id of SOURCE_ORDER){
+    const s=byId[id]; if(!s) continue;
+    const hc=healthClass(s.health), c=el('div',undefined,`card health-card ${hc}`);
+    const top=el('div',undefined,'health-top');
+    top.append(el('div',sourceLabel(id),'source-name'), el('div',s.health,`state ${hc}`));
+    c.append(top, el('div',s.class,'source-meta'));
+    const sc=score(s), row=el('div',undefined,'source-score');
+    const strong=el('strong', sc===null?'—':sc.toFixed(3)); strong.style.color=sourceColor(id);
+    row.append(strong,el('span',sc===null?'no scored window':'conservative bits/byte'));
+    c.append(row);
+    const detail = id==='CHAOSFIELD'
+      ? `${int(d.chaosfield_protocol?.conditioned_frames||0)} conditioned frames · zero local credit`
+      : `${int(s.accepted_bytes)} accepted · ${int(s.gated_bytes)} gated`;
+    c.append(el('div',detail,'source-meta'));
+    box.append(c);
+  }
+}
+
+function renderChaosfield(d){
+  const cf=d.chaosfield_protocol||{}, source=(d.sources||[]).find(s=>s.id==='CHAOSFIELD');
+  const tiles=$('chaosfieldTiles'); tiles.replaceChildren();
+  const items=[
+    ['HEALTH',source?.health||'ABSENT','REMOTE_CONDITIONED'],
+    ['PROTOCOL FRAMES',int(cf.protocol_frames||0),`${int(cf.status_frames||0)} status`],
+    ['CONDITIONED',int(cf.conditioned_frames||0),`${int(cf.conditioned_bytes||0)} bytes mixed`],
+    ['CRC FAILURES',int(cf.crc_failures||0),`${int(cf.malformed_frames||0)} malformed`],
+    ['SEQUENCE GAPS',int(cf.sequence_gaps||0),`${int(cf.replays||0)} replays`],
+    ['REJECTED BYTES',int(cf.rejected_bytes||0),`${int(cf.nonprotocol_lines||0)} nonprotocol lines`]
+  ];
+  for(const [label,value,sub] of items){
+    const c=el('div',undefined,'protocol-tile');
+    if((label==='CRC FAILURES'||label==='SEQUENCE GAPS') && Number(value.replace(/,/g,''))===0)c.classList.add('protocol-good');
+    if(label==='HEALTH' && String(value).toUpperCase()==='HEALTHY')c.classList.add('protocol-good');
+    c.append(el('small',label),el('strong',value),el('small',sub)); tiles.append(c);
+  }
+  $('chaosfieldMeta').textContent = `session ${cf.last_session || '—'} · last sequence ${int(cf.last_sequence || 0)} · protocol ${ageText(Number(cf.last_protocol_ms||0))} · pool mix ${ageText(Number(cf.last_mix_ms||0))}`;
+}
+
+function renderTable(d){
+  const rows=$('sourceRows'); rows.replaceChildren();
+  for(const s of d.sources||[]){
+    const tr=el('tr'), hc=healthClass(s.health), sc=score(s);
+    const values=[
+      sourceLabel(s.id), s.class, s.health, int(s.used), sc===null?'—':sc.toFixed(3), n(entropy(s.shannon_milli)), n(entropy(s.min_entropy_milli)), n(entropy(s.markov_milli)),
+      n(Number(s.chi_square_milli||0)/1000,1), n(Number(s.serial_correlation_micro||0)/1_000_000,4), int(s.credited_bits), int(s.unique_symbols), String(s.rct_pass), String(s.apt_pass), int(s.raw_bytes), int(s.accepted_bytes), int(s.gated_bytes)
+    ];
+    values.forEach((v,i)=>{ const td=el('td',v); if(i===2)td.className=`health-text ${hc}`; if(i===4&&sc!==null)td.style.color=sourceColor(s.id); tr.append(td); });
+    rows.append(tr);
+  }
+}
+
+function renderCHVS(d){
+  const rp=d.remote_provenance||{}, box=$('chvsTiles'); box.replaceChildren();
+  const items=[
+    ['OUTBOUND',int(d.outbound_frames||0),`sequence ${int(d.chvs_sequence||0)}`],
+    ['INBOUND',int(d.inbound_frames||0),`${int(d.inbound_rejected||0)} rejected`],
+    ['INBOUND GAPS',int(d.inbound_gaps||0),'replay / continuity guard'],
+    ['REMOTE MIXED',int(rp.frames_mixed||0),`${int(rp.bytes_mixed||0)} bytes`],
+    ['REMOTE ORIGIN CREDIT',int(rp.last_origin_credit||0),'provenance only'],
+    ['BIND',d.bind_ip||'—','private overlay listener']
+  ];
+  for(const [label,value,sub] of items){ const c=el('div',undefined,'protocol-tile'); if(label==='INBOUND GAPS'&&Number(d.inbound_gaps||0)===0)c.classList.add('protocol-good'); c.append(el('small',label),el('strong',value),el('small',sub)); box.append(c); }
+}
+
+function seriesFor(path){
+  return history.map(h=>{
+    try { return path(h); } catch { return null; }
+  }).map(v=>Number.isFinite(v)?v:null);
+}
+function hasData(a){ return a.some(v=>v!==null); }
+function chart(spec){
+  const box=el('div',undefined,'chart'); box.append(el('h3',spec.title));
+  const t=history.map(x=>x.t/1000);
+  if(t.length<2 || !spec.list.some(s=>hasData(s.data))){ box.append(el('div','Collecting history…','empty-chart')); return box; }
+  const W=660,H=205,L=58,R=14,T=10,B=27;
+  const values=spec.list.flatMap(s=>s.data).filter(v=>v!==null);
+  let lo=spec.min!==undefined?spec.min:Math.min(...values), hi=spec.max!==undefined?spec.max:Math.max(...values);
+  if(spec.threshold!==undefined && spec.threshold!==null)hi=Math.max(hi,spec.threshold*1.1);
+  if(spec.max===undefined)hi*=1.08;
+  if(!(hi>lo)){ hi=lo+1; }
+  const t0=t[0], t1=t[t.length-1], span=Math.max(1,t1-t0);
+  const X=i=>L+(W-L-R)*(t[i]-t0)/span, Y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+  const s=svg('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':spec.title});
+  for(const v of [lo,(lo+hi)/2,hi]){
+    s.append(svg('line',{x1:L,x2:W-R,y1:Y(v),y2:Y(v),stroke:'#26324a','stroke-width':1}));
+    const lab=svg('text',{x:L-7,y:Y(v)+4,'text-anchor':'end','font-size':11,fill:'#8995ad'}); lab.textContent=spec.fmt(v); s.append(lab);
+  }
+  const left=svg('text',{x:L,y:H-6,'text-anchor':'start','font-size':11,fill:'#8995ad'}); left.textContent=`-${Math.round(span/60)} min`;
+  const right=svg('text',{x:W-R,y:H-6,'text-anchor':'end','font-size':11,fill:'#8995ad'}); right.textContent='now'; s.append(left,right);
+  if(spec.threshold!==undefined && spec.threshold!==null){ s.append(svg('line',{x1:L,x2:W-R,y1:Y(spec.threshold),y2:Y(spec.threshold),stroke:'#e6b85c','stroke-width':1,'stroke-dasharray':'5 5',opacity:.8})); }
+  for(const ser of spec.list){
+    let d='',open=false;
+    ser.data.forEach((v,i)=>{ if(v===null){open=false;return;} d+=(open?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' '; open=true; });
+    s.append(svg('path',{d,fill:'none',stroke:ser.color,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+  }
+  const hair=svg('line',{y1:T,y2:H-B,stroke:'#d8e3f6','stroke-width':1,visibility:'hidden',opacity:.65});
+  const dots=spec.list.map(ser=>svg('circle',{r:4,fill:ser.color,stroke:'#0b1020','stroke-width':2,visibility:'hidden'})); s.append(hair,...dots);
+  const hit=svg('rect',{x:L,y:T,width:W-L-R,height:H-T-B,fill:'transparent'}); s.append(hit);
+  const tip=el('div',undefined,'tip'); tip.hidden=true;
+  const move=ev=>{
+    const r=s.getBoundingClientRect(), px=(ev.clientX-r.left)*W/r.width; let best=0;
+    for(let i=1;i<t.length;i++)if(Math.abs(X(i)-px)<Math.abs(X(best)-px))best=i;
+    hair.setAttribute('x1',X(best)); hair.setAttribute('x2',X(best)); hair.setAttribute('visibility','visible');
+    tip.replaceChildren(el('div',new Date(t[best]*1000).toLocaleTimeString(),'when'));
+    spec.list.forEach((ser,j)=>{ const v=ser.data[best]; dots[j].setAttribute('visibility',v===null?'hidden':'visible'); if(v!==null){dots[j].setAttribute('cx',X(best));dots[j].setAttribute('cy',Y(v));} const row=el('div'); const k=el('span',undefined,'key'); k.style.borderColor=ser.color; row.append(k,el('b',v===null?'—':spec.fmt(v)),document.createTextNode(ser.name)); tip.append(row); });
+    tip.hidden=false; const br=box.getBoundingClientRect(); const p=ev.clientX-br.left; tip.style.left=Math.min(Math.max(8,p+14),br.width-tip.offsetWidth-8)+'px'; tip.style.top='42px';
+  };
+  const leave=()=>{hair.setAttribute('visibility','hidden');dots.forEach(x=>x.setAttribute('visibility','hidden'));tip.hidden=true;};
+  hit.addEventListener('pointermove',move); hit.addEventListener('pointerdown',move); hit.addEventListener('pointerleave',leave);
+  box.append(s,tip);
+  const legend=el('div',undefined,'legend');
+  for(const ser of spec.list){ let v=null; for(let i=ser.data.length-1;i>=0;i--)if(ser.data[i]!==null){v=ser.data[i];break;} const item=el('span'); const k=el('span',undefined,'key'); k.style.borderColor=ser.color; item.append(k,document.createTextNode(`${ser.name} `),el('b',v===null?'—':spec.fmt(v))); legend.append(item); }
+  box.append(legend); return box;
+}
+
+function renderCharts(){
+  const box=$('charts'); box.replaceChildren();
+  const scored=SOURCE_ORDER.filter(id=>history.some(h=>Number.isFinite(h.src?.[id]?.score))).map(id=>({name:sourceLabel(id),color:sourceColor(id),data:seriesFor(h=>h.src?.[id]?.score)}));
+  box.append(chart({title:'Conservative source score · bits/byte',list:scored,min:0,max:8,fmt:v=>v.toFixed(3)}));
+  box.append(chart({title:'RF motion score',list:[{name:'Wi-Fi movement',color:'#a98cff',data:seriesFor(h=>h.motion)}],min:0,fmt:v=>v.toFixed(0)}));
+  const rates=SOURCE_ORDER.filter(id=>history.some(h=>Number.isFinite(h.rates?.[id]))).map(id=>({name:sourceLabel(id),color:sourceColor(id),data:seriesFor(h=>h.rates?.[id])}));
+  box.append(chart({title:'Raw source input rate',list:rates,min:0,fmt:v=>formatRate(v)}));
+  box.append(chart({title:'Pool / CHVS progression',list:[
+    {name:'Pool generation',color:'#e6b85c',data:seriesFor(h=>h.generation)},
+    {name:'CHVS sequence',color:'#61b6ff',data:seriesFor(h=>h.chvs)}
+  ],min:0,fmt:v=>v.toFixed(0)}));
+}
+
+async function refresh(){
+  try{
+    const r=await fetch('/status.json',{cache:'no-store'}); if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const d=await r.json(); snapshot(d);
+    renderTop(d); renderHealthCards(d); renderChaosfield(d); renderTable(d); renderCHVS(d); renderCharts();
+    $('connection').textContent='LIVE'; $('connection').className='badge live';
+    $('updated').textContent=`updated ${new Date().toLocaleTimeString()} · ${d.bind_ip || 'overlay'}`;
+    $('errors').textContent='';
+  }catch(e){
+    $('connection').textContent='DISCONNECTED'; $('connection').className='badge dead';
+    $('errors').textContent=`status unavailable: ${e}`;
+  }
+}
+refresh(); setInterval(refresh,2000);
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+* text=auto
+
+# The build and deployment targets run on Linux.
+Makefile text eol=lf
+*.gpr text eol=lf
+*.adb text eol=lf
+*.ads text eol=lf
+*.html text eol=lf
+*.md text eol=lf
