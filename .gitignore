@@ -28,3 +28,11 @@ status.json
 Thumbs.db
 *.swp
 *~
+
+# ESP-IDF generated state and local captures
+/firmware/esp32/build/
+/firmware/esp32/sdkconfig
+/firmware/esp32/sdkconfig.old
+/firmware/esp32/captures/
+__pycache__/
+*.pyc

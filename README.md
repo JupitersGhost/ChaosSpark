@@ -11,7 +11,7 @@ It began as a way to understand what these sources were doing over time. It
 became a more serious Ada project than I originally expected, so I am publishing
 it as a source showcase and a record of the design.
 
-> **Project status:** experimental and intended for study. ChaosSpark is not a
+> **Project status:** experimental and intended for study. Chaos Spark is not a
 > certified entropy source, a replacement for the operating system RNG, or a
 > production security component.
 
@@ -64,11 +64,25 @@ behind health thresholds, sensor transformations, and entropy-credit decisions.
 
 ## ESP32 / Chaosfield firmware
 
-The ESP32 firmware is not included in this repository. A reference firmware
-implementation is planned for a separate repository. Until then, existing ESP32
-firmware can interoperate by implementing the serial contract below.
+A reference ESP-IDF v6.1 implementation is included under
+[`firmware/esp32/`](firmware/esp32/). It targets a classic
+ESP32-D0WD-V3/NodeMCU-style board with 4 MiB flash and collects observations
+from two ADC pickup inputs, `esp_random()`, ADC timing, passive Wi-Fi RSSI, and
+passive BLE RSSI.
 
-### Current serial contract
+The firmware measures and health-tests each source independently before
+combining fresh accepted contributions in a SHA3-512 pool. Its serial output
+remains explicitly unqualified and carries zero credited entropy; Chaos Spark
+treats it as supplemental influence rather than a certified local entropy
+source.
+
+The [firmware README](firmware/esp32/README.md) covers building, flashing,
+capture tools, acquisition behavior, and health policy. The separate
+[wiring guide](firmware/esp32/WIRING.md) documents the prototype passive-pickup
+interface, while the [validation record](firmware/esp32/VALIDATION.md) preserves
+the original engineering checks and their limitations.
+
+### Serial compatibility contract
 
 The host reads the configured Chaosfield serial device at **115200 baud**. The
 firmware must emit one compact JSON envelope per line:
@@ -98,8 +112,9 @@ Implementation rules, briefly:
 Status frames use the same common fields with `type` set to `status`; they do
 not need `algorithm`, `contributor_count`, or `conditioned_hex`.
 
-The protocol name and field rules above are the compatibility boundary for the
-future firmware repository. If they change, both ends should change together.
+The protocol name and field rules above are the compatibility boundary between
+the bundled firmware and the Ada host. If they change, both ends should change
+together.
 
 ## Reference system
 
@@ -158,6 +173,7 @@ chaos_spark.gpr  GNAT project definition
 Makefile         build, proof, and example deployment targets
 src/             Ada and SPARK source
 web/             local status dashboard
+firmware/esp32/  ESP-IDF Chaosfield firmware, tools, and hardware notes
 ```
 
 ## License
